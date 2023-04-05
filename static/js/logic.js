@@ -101,9 +101,11 @@ function createMap(dataFeatures) {
     
         // loop through our density intervals and generate a label with a colored square for each interval
         for (let i = 0; i < severity.length; i++) {
+            range = severity[i] + (severity[i + 1] ? ' &ndash; ' + severity[i + 1] : '+');
+            backColor = 
+            fontColor = 
             div.innerHTML +=
-                '<li style="background-color:' + getColor(severity[i] + 1) + '"></li> ' + 
-                severity[i] + (severity[i + 1] ? ' &ndash; ' + severity[i + 1] : '+');
+                '<i style="background-color:' + getColor(severity[i] + 1) + '">___</i>'+ range +'<br>'
         }
     
         return div;
