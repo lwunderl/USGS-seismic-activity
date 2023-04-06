@@ -1,15 +1,28 @@
-//create variable for url
+//create variable for earthquake url
 let url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
-//d3.json the variable to get the url data
+//create variable for plate url
+let plateURL = "https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json";
+
+//d3.json to get the url data
 d3.json(url).then(function(data){
     console.log(data);
     // getDataFeatures(data.features)
-    createMap(data.features)
-
+    createMap(data.features);
 });
 
-//function to create maps
+//function to return color based on depth variable
+function getColor(d) {
+    return d > 90 ? "#FF00FE" :
+            d > 50 ? "#FF0069" :
+            d > 40 ? "#FF0000" :
+            d > 30 ? "#FF4700" :
+            d > 20 ? "#FF7F00" :
+            d > 10 ? "#FFEF00" :
+            "#75FF00";
+}
+
+//function to create map
 function createMap(dataFeatures) {
 
     //create layer for street map
@@ -17,7 +30,7 @@ function createMap(dataFeatures) {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     });
 
-    //create layer for topo map
+    //create layer for topographic map
     let topoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
     });
@@ -28,18 +41,7 @@ function createMap(dataFeatures) {
         "Topographic View": topoMap
     };
 
-    //set conditional for color based on variable
-    function getColor(d) {
-        return d > 90 ? "#FF00FE" :
-                d > 50 ? "#FF0069" :
-                d > 40 ? "#FF0000" :
-                d > 30 ? "#FF4700" :
-                d > 20 ? "#FF7F00" :
-                d > 10 ? "#FFEF00" :
-                "#75FF00";
-    }
-
-    // create array variables to store marker points (lat, lon, depth), magnitude, depth
+    // create array variable to store marker points lat, lon, magnitude, depth
     let earthquakeEvents = [];
 
     //loop through dataFeatures and set variables for lat, lon, depth, and magnitude
@@ -52,7 +54,7 @@ function createMap(dataFeatures) {
         //get color based on depth
         let color = getColor(depth)
 
-        //add to earthquakeEvents array with a dynamic circle and pop-up information
+        //add to earthquakeEvents array with circle and pop-up information
         earthquakeEvents.push(
             L.circle([lat, lon], {
                 color: "",
@@ -71,7 +73,7 @@ function createMap(dataFeatures) {
     //turn earthquakeEvents array into a layer
     let earthquakes = L.layerGroup(earthquakeEvents);
 
-    //create objects for control group for over lays
+    //create objects for control group for overlays
     overLayers = {
         "Earthquakes": earthquakes,
     };
@@ -79,10 +81,11 @@ function createMap(dataFeatures) {
     //create legend for depth colors
     let legend = L.control({position: "bottomright"});
 
-    //construct format for legend upon adding legend to myMap
+    //construct format and content for legend upon adding legend to myMap
     legend.onAdd = function () {
         let div = L.DomUtil.create('div', 'info legend');
         let depthRanges = [0,10,20,30,40,50,90];
+        //array to store each iterated label
         let labels = [];
 
         // loop through depthRange intervals and generate a label with a colored square for each interval, push to labels array
@@ -117,9 +120,27 @@ function createMap(dataFeatures) {
     //add legend to the map
     legend.addTo(myMap);
 
-    //create layer control panel
-    L.control.layers(baseLayers, overLayers, {
+    //create layer control panel and add to map
+    controlPanel = L.control.layers(baseLayers, overLayers, {
         collapsed: false
     }).addTo(myMap);
 
+    //get tectonic plate boundary information
+    d3.json(plateURL).then(function(data) {
+        console.log(data)
+        plates = L.geoJson(data.features, {
+            style: function(feature) {
+                return {
+                color: "red",
+                weight: 5
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                //attach pop-up information
+                layer.bindPopup("<h3>Plate Boundary: " + feature.properties.Name + "</h3>");
+            }
+        });
+        //add layer to control overlay
+        controlPanel.addOverlay(plates, "Tectonic Plates")
+    })
 }
