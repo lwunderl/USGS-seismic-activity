@@ -9,17 +9,6 @@ d3.json(url).then(function(data){
 
 });
 
-//create overlays with onEachFeature method
-function onEachFeature(feature, layer) {
-    layer.bindPopup(
-        `<h5>${feature.properties.place}</h5><p>Magnitude: ${feature.properties.mag}Depth: ${feature.geometry[2]}${new Date(feature.properties.time)}</p>`
-        )
-    }
-
-    // let geoData = L.geoJson(geoDataFeatures, {
-    //     onEachFeature: onEachFeature
-    // }).addTo(myMap)
-
 //function to create maps
 function createMap(dataFeatures) {
 
@@ -63,14 +52,19 @@ function createMap(dataFeatures) {
         //get color based on depth
         let color = getColor(depth)
 
-        //add to earthquakeEvents array with a circle to plot
+        //add to earthquakeEvents array with a dynamic circle and pop-up information
         earthquakeEvents.push(
             L.circle([lat, lon], {
                 color: "",
                 fillColor: color,
                 fillOpacity: .75,
                 radius: mag * 10000
-            })
+            }).bindPopup(
+                `<h4>${dataFeatures[i].properties.place}</h4>
+                <p>Magnitude: ${dataFeatures[i].properties.mag}<br>
+                Depth: ${dataFeatures[i].geometry.coordinates[2]}<br>
+                ${new Date(dataFeatures[i].properties.time)}</p>`
+                )
         );
     }
 
@@ -79,7 +73,7 @@ function createMap(dataFeatures) {
 
     //create objects for control group for over lays
     overLayers = {
-        "Earthquakes": earthquakes
+        "Earthquakes": earthquakes,
     };
 
     //create legend for depth colors
