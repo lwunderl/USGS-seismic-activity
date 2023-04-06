@@ -41,41 +41,61 @@ function createMap(dataFeatures) {
         "Topographic View": topoMap
     };
 
-    // create array variable to store marker points lat, lon, magnitude, depth
+    // create array variable to store circles
     let earthquakeEvents = [];
+
+    //create array variable to store points
+    let heatArray = [];
 
     //loop through dataFeatures and set variables for lat, lon, depth, and magnitude
     for (let i = 0; i < dataFeatures.length; i++) {
-        let lon = dataFeatures[i].geometry.coordinates[0]
-        let lat = dataFeatures[i].geometry.coordinates[1]
-        let depth = dataFeatures[i].geometry.coordinates[2]
-        let mag = dataFeatures[i].properties.mag
+        //create if statement variable to skip null
+        let locationFeature = dataFeatures[i].geometry;
+        
+        //create variables for building circles
+        let lon = dataFeatures[i].geometry.coordinates[0];
+        let lat = dataFeatures[i].geometry.coordinates[1];
+        let depth = dataFeatures[i].geometry.coordinates[2];
+        let mag = dataFeatures[i].properties.mag;
 
         //get color based on depth
         let color = getColor(depth)
 
         //add to earthquakeEvents array with circle and pop-up information
-        earthquakeEvents.push(
-            L.circle([lat, lon], {
-                color: "",
-                fillColor: color,
-                fillOpacity: .75,
-                radius: mag * 10000
-            }).bindPopup(
-                `<h4>${dataFeatures[i].properties.place}</h4>
-                <p>Magnitude: ${dataFeatures[i].properties.mag}<br>
-                Depth: ${dataFeatures[i].geometry.coordinates[2]}<br>
-                ${new Date(dataFeatures[i].properties.time)}</p>`
-                )
-        );
+        if (locationFeature){
+            earthquakeEvents.push(
+                L.circle([lat, lon], {
+                    color: "",
+                    fillColor: color,
+                    fillOpacity: .75,
+                    radius: mag * 10000
+                }).bindPopup(
+                    `<h4>${dataFeatures[i].properties.place}</h4>
+                    <p>Magnitude: ${dataFeatures[i].properties.mag}<br>
+                    Depth: ${dataFeatures[i].geometry.coordinates[2]}<br>
+                    ${new Date(dataFeatures[i].properties.time)}</p>`
+                    )
+            );
+            heatArray.push(
+                [lat, lon]
+            );
+        }
     }
 
     //turn earthquakeEvents array into a layer
     let earthquakes = L.layerGroup(earthquakeEvents);
 
+    let heat = L.heatLayer(heatArray, {
+      radius: 20,
+      blur: 15,
+      minOpacity: .5,
+      max: 1
+    });
+
     //create objects for control group for overlays
     overLayers = {
-        "Earthquakes": earthquakes,
+        "Heat Map": heat,
+        "Earthquakes": earthquakes
     };
 
     //create legend for depth colors
@@ -114,7 +134,7 @@ function createMap(dataFeatures) {
     let myMap = L.map("map", {
         center: [44.9778, -93.2650],
         zoom: 5,
-        layers: [streetMap, earthquakes]
+        layers: [streetMap, heat]
     });
 
     //add legend to the map
