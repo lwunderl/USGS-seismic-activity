@@ -6,29 +6,19 @@ d3.json(url).then(function(data){
     console.log(data);
     // getDataFeatures(data.features)
     createMap(data.features)
+
 });
 
-//function to extract data properties and create map
-// function getDataFeatures(dataDotFeatures) {
+//create overlays with onEachFeature method
+function onEachFeature(feature, layer) {
+    layer.bindPopup(
+        `<h5>${feature.properties.place}</h5><p>Magnitude: ${feature.properties.mag}Depth: ${feature.geometry[2]}${new Date(feature.properties.time)}</p>`
+        )
+    }
 
-//     //create overlays with onEachFeature method
-//     function onEachFeature(dataFeatures, layer) {
-//         layer.bindPopup(
-//             `<h5>
-//             ${dataFeatures.properties.place}
-//             </h5>
-//             <p>
-//             ${new Date(dataFeatures.properties.time)}
-
-//             </p>`
-//             )
-//         }
-    
-//     let geoJSONdataDotFeatures = L.geoJSON(dataDotFeatures, {
-//         onEachFeature: onEachFeature
-//     })
-
-// };
+    // let geoData = L.geoJson(geoDataFeatures, {
+    //     onEachFeature: onEachFeature
+    // }).addTo(myMap)
 
 //function to create maps
 function createMap(dataFeatures) {
@@ -43,14 +33,11 @@ function createMap(dataFeatures) {
         attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
     });
 
-    //create control group for base layers
+    //create objects for control group for base layers
     baseLayers = {
         "Street View": streetMap,
         "Topographic View": topoMap
     };
-
-    // create array variables to store marker points (lat, lon, depth), magnitude, depth
-    let earthquakeEvents = [];
 
     //set conditional for color based on variable
     function getColor(d) {
@@ -62,6 +49,9 @@ function createMap(dataFeatures) {
                 d > 10 ? "#FFEF00" :
                 "#75FF00";
     }
+
+    // create array variables to store marker points (lat, lon, depth), magnitude, depth
+    let earthquakeEvents = [];
 
     //loop through dataFeatures and set variables for lat, lon, depth, and magnitude
     for (let i = 0; i < dataFeatures.length; i++) {
@@ -87,31 +77,42 @@ function createMap(dataFeatures) {
     //turn earthquakeEvents array into a layer
     let earthquakes = L.layerGroup(earthquakeEvents);
 
-    //create control group for over lays
+    //create objects for control group for over lays
     overLayers = {
         "Earthquakes": earthquakes
     };
 
+    //create legend for depth colors
     let legend = L.control({position: "bottomright"});
 
+    //construct format for legend upon adding legend to myMap
     legend.onAdd = function () {
+        let div = L.DomUtil.create('div', 'info legend');
+        let depthRanges = [0,10,20,30,40,50,90];
+        let labels = [];
 
-        let div = L.DomUtil.create('div', 'info legend'),
-            severity = [0,10,20,30,40,50,90];
-    
-        // loop through our density intervals and generate a label with a colored square for each interval
-        for (let i = 0; i < severity.length; i++) {
-            range = severity[i] + (severity[i + 1] ? ' &ndash; ' + severity[i + 1] : '+');
-            backColor = 
-            fontColor = 
-            div.innerHTML +=
-                '<i style="background-color:' + getColor(severity[i] + 1) + '">___</i>'+ range +'<br>'
-        }
-    
+        // loop through depthRange intervals and generate a label with a colored square for each interval, push to labels array
+        for (let i = 0; i < depthRanges.length; i++) {
+            let depthRange = depthRanges[i] + (depthRanges[i + 1] ? ' &ndash; ' + depthRanges[i + 1] : '+');
+            labels.push(
+                "<i style=\"text-align:right;background-color:" + 
+                getColor(depthRanges[i] + 1) + 
+                ";color:" + 
+                getColor(depthRanges[i] + 1) + 
+                "\">_____</i> " + depthRange + 
+                "<br>")
+            }
+        
+        // use innerHTML to add the array of labels and format legend
+        div.innerHTML += 
+            "<div style=\"background-color: white; padding: 0px 10px\" class=\"labels\">"+
+                "<h2 style=\"text-align:center\">Depth of<br>Epicenter</h2>"+
+                    "<p>" + labels.join("") + "</p>"+
+            "</div>";
+
         return div;
     };
     
-
     //create myMap variable
     let myMap = L.map("map", {
         center: [44.9778, -93.2650],
@@ -119,6 +120,7 @@ function createMap(dataFeatures) {
         layers: [streetMap, earthquakes]
     });
 
+    //add legend to the map
     legend.addTo(myMap);
 
     //create layer control panel
