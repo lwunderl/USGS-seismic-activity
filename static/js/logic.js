@@ -137,9 +137,6 @@ function createMap(dataFeatures) {
         layers: [streetMap, heat]
     });
 
-    //add legend to the map
-    legend.addTo(myMap);
-
     //create layer control panel and add to map
     controlPanel = L.control.layers(baseLayers, overLayers, {
         collapsed: false
@@ -161,6 +158,20 @@ function createMap(dataFeatures) {
             }
         });
         //add layer to control overlay
-        controlPanel.addOverlay(plates, "Tectonic Plates")
-    })
+        controlPanel.addOverlay(plates, "Tectonic Plates");
+        
+    //add legend when Earthquakes is selected in the control panel
+    myMap.on("overlayadd", function (event) {
+        if (event.name === "Earthquakes") {
+            legend.addTo(myMap)}
+    });
+
+    //remove legend when Earthquakes is selected in the control panel
+    myMap.on("overlayremove", function (event) {
+        if (event.name === "Earthquakes") {
+            legend.remove()}
+    });
+    
+    });
+
 }
