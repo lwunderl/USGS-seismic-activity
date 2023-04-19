@@ -94,7 +94,7 @@ function createMap(dataFeatures) {
 
     //create objects for control group for overlays
     overLayers = {
-        "Heat Map": heat,
+        "Frequency": heat,
         "Earthquakes": earthquakes
     };
 
