@@ -6,4 +6,4 @@ The page was created using javascript d3, leaflet, and html.
 
 To see the map, go here:
 
-<strong><a href="https://lwunderl.github.io/leaflet-challenge/" target="_blank">USGS Seismic Activity</a></strong>
+<strong><a href="https://lwunderl.github.io/USGS-seismic-activity/" target="_blank">USGS Seismic Activity</a></strong>
