@@ -1,4 +1,4 @@
-# leaflet-challenge
+# Past 7 days USGS seismic activity
 
 This repository uses git pages to display an interactive dashboard of the seismic activity recorded by the USGS in the past 7 days. 
 
